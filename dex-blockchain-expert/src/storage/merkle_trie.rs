@@ -428,7 +428,7 @@ impl MerklePatriciaTrie {
         if key.len() > common_len {
             let new_leaf = Node::Leaf {
                 path: NibblePath::from_nibbles(&key[common_len + 1..]),
-                value,
+                value: value.clone(),
             };
             let new_leaf_hash = self.create_node(nodes, new_leaf);
             branch_children[key[common_len] as usize] = Some(new_leaf_hash);
@@ -436,12 +436,14 @@ impl MerklePatriciaTrie {
         
         // 处理现有的叶节点
         if existing_key.len() > common_len {
-            let existing_leaf = Node::Leaf {
-                path: NibblePath::from_nibbles(&existing_key[common_len + 1..]),
-                value: existing_value.unwrap(),
-            };
-            let existing_leaf_hash = self.create_node(nodes, existing_leaf);
-            branch_children[existing_key[common_len] as usize] = Some(existing_leaf_hash);
+            if let Some(val) = existing_value.clone() {
+                let existing_leaf = Node::Leaf {
+                    path: NibblePath::from_nibbles(&existing_key[common_len + 1..]),
+                    value: val,
+                };
+                let existing_leaf_hash = self.create_node(nodes, existing_leaf);
+                branch_children[existing_key[common_len] as usize] = Some(existing_leaf_hash);
+            }
         }
         
         let branch = Node::Branch {
@@ -478,7 +480,7 @@ impl MerklePatriciaTrie {
         if key.len() > common_len {
             let new_leaf = Node::Leaf {
                 path: NibblePath::from_nibbles(&key[common_len + 1..]),
-                value,
+                value: value.clone(),
             };
             let new_leaf_hash = self.create_node(nodes, new_leaf);
             branch_children[key[common_len] as usize] = Some(new_leaf_hash);
@@ -565,7 +567,7 @@ impl MerklePatriciaTrie {
             .filter_map(|(i, c)| c.map(|h| (i, h)))
             .collect();
         
-        match (non_empty_children.len(), value) {
+        match (non_empty_children.len(), value.clone()) {
             (0, None) => None, // 空分支，删除
             (0, Some(v)) => {
                 // 只有值的分支，转换为叶节点

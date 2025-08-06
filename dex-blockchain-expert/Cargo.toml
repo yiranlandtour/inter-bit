@@ -26,6 +26,8 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 rand = "0.8"
 ed25519-dalek = "2.1"
+memmap2 = "0.9"
+libc = "0.2"
 
 [[bench]]
 name = "consensus_bench"

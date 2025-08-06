@@ -55,7 +55,7 @@ pub struct Vote {
     pub signature: Vec<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum VoteType {
     Prevote,
     Precommit,
