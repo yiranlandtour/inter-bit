@@ -65,7 +65,9 @@ impl StateDB {
     }
 
     pub async fn get_storage(&self, address: [u8; 20], key: H256) -> H256 {
-        let address_hash = H256::from(address);
+        let mut address_bytes = [0u8; 32];
+        address_bytes[12..32].copy_from_slice(&address);
+        let address_hash = H256::from(address_bytes);
         let cache_key = (address_hash, key);
         
         // 查缓存
@@ -89,7 +91,9 @@ impl StateDB {
     }
 
     pub async fn set_storage(&self, address: [u8; 20], key: H256, value: H256) {
-        let address_hash = H256::from(address);
+        let mut address_bytes = [0u8; 32];
+        address_bytes[12..32].copy_from_slice(&address);
+        let address_hash = H256::from(address_bytes);
         self.storage.insert((address_hash, key), value);
     }
 
@@ -147,7 +151,7 @@ impl StateDB {
         for entry in self.storage.iter() {
             let ((address_hash, key), value) = entry.pair();
             let storage_key = Self::storage_key_from_hash(*address_hash, *key);
-            batch.push((storage_key, value.0.to_vec()));
+            batch.push((storage_key, value.as_bytes().to_vec()));
         }
         
         // 批量写入代码
@@ -163,7 +167,7 @@ impl StateDB {
         // 记录区块哈希
         self.backend.put(
             &format!("block:{}", hex::encode(block_hash)),
-            &block_hash.0.to_vec()
+            &block_hash.as_bytes().to_vec()
         ).await?;
         
         // 清理脏数据

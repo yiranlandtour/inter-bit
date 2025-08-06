@@ -21,6 +21,16 @@ pub struct TransactionSignature {
     pub s: [u8; 32],
 }
 
+impl Default for TransactionSignature {
+    fn default() -> Self {
+        Self {
+            v: 0,
+            r: [0; 32],
+            s: [0; 32],
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionReceipt {
     pub transaction_hash: H256,
@@ -77,7 +87,7 @@ impl Transaction {
         let mut s = [0u8; 32];
         
         // 使用私钥和消息哈希生成签名（简化版）
-        r[..32].copy_from_slice(&hash.0[..32]);
+        r[..32].copy_from_slice(&hash.as_bytes()[..32]);
         s[..32].copy_from_slice(private_key);
         
         self.signature = TransactionSignature {

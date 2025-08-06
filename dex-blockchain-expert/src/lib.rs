@@ -5,6 +5,7 @@ pub mod evm_compat;
 pub mod network;
 pub mod optimization;
 pub mod monitoring;
+pub mod dex;
 
 pub use consensus::tendermint::TendermintConsensus;
 pub use state_machine::HighPerformanceStateMachine;

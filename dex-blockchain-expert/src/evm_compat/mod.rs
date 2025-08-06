@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use primitive_types::U256;
+use serde::{Deserialize, Serialize};
 
 pub struct EvmExecutor {
     storage: Arc<RwLock<HashMap<[u8; 20], AccountState>>>,
@@ -9,7 +10,7 @@ pub struct EvmExecutor {
     chain_id: u64,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 struct AccountState {
     balance: U256,
     nonce: u64,
@@ -153,7 +154,7 @@ impl EvmExecutor {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionResult {
     pub success: bool,
     pub gas_used: u64,
@@ -162,14 +163,14 @@ pub struct ExecutionResult {
     pub created_address: Option<[u8; 20]>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Log {
     pub address: [u8; 20],
     pub topics: Vec<[u8; 32]>,
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EvmError {
     ExecutionFailed(String),
     InvalidTransaction(String),

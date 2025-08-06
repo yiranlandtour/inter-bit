@@ -1,5 +1,5 @@
 use super::*;
-use crate::storage::OptimizedStateStorage;
+use crate::storage::{OptimizedStateStorage, Storage};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
@@ -152,8 +152,9 @@ impl HighPerformanceStateMachine {
         &self,
         transactions: Vec<Transaction>,
     ) -> Result<Vec<TransactionReceipt>, Error> {
-        let (tx_sender, tx_receiver) = bounded(transactions.len());
-        let (receipt_sender, receipt_receiver) = bounded(transactions.len());
+        let tx_count = transactions.len();
+        let (tx_sender, tx_receiver) = bounded(tx_count);
+        let (receipt_sender, receipt_receiver) = bounded(tx_count);
         
         // 发送事务到工作队列
         for tx in transactions {
@@ -162,7 +163,7 @@ impl HighPerformanceStateMachine {
         drop(tx_sender);
         
         // 启动工作线程
-        let workers = (0..MAX_PARALLEL_WORKERS.min(transactions.len()))
+        let workers = (0..MAX_PARALLEL_WORKERS.min(tx_count))
             .map(|_| {
                 let tx_receiver = tx_receiver.clone();
                 let receipt_sender = receipt_sender.clone();

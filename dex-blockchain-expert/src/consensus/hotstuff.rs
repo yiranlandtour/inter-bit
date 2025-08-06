@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 
 use super::types::*;
 use super::validator::Validator;
+use crate::state_machine::transaction::Transaction as StateTransaction;
 
 // HotStuff共识算法实现 - 线性消息复杂度O(n)
 // 主要优化：
@@ -24,7 +25,7 @@ pub struct HotStuffBlock {
     pub view: u64,
     pub parent_hash: [u8; 32],
     pub qc: QuorumCertificate, // 包含前一个块的QC
-    pub transactions: Vec<Transaction>,
+    pub transactions: Vec<StateTransaction>,
     pub timestamp: u64,
 }
 
@@ -41,13 +42,8 @@ pub struct PartialSignature {
     pub signature: Vec<u8>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Transaction {
-    pub hash: [u8; 32],
-    pub data: Vec<u8>,
-}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HotStuffMessage {
     Proposal(ProposalMsg),
     Vote(VoteMsg),
@@ -234,12 +230,15 @@ impl HotStuffConsensus {
         self.broadcast(HotStuffMessage::Proposal(proposal)).await;
         
         // 自己投票 - 避免递归，使用消息传递代替直接调用
+        let partial_sig = PartialSignature {
+            validator_id: self.node_id.clone(),
+            signature: self.sign(&self.hash_block(&block)),
+        };
+        
         let vote = VoteMsg {
             block_hash: self.hash_block(&block),
             view,
-            vote_type: HotStuffVoteType::Vote,
-            voter: self.node_id.clone(),
-            signature: vec![],
+            partial_sig,
         };
         
         // 发送投票消息到自己的投票处理队列
@@ -475,7 +474,7 @@ impl HotStuffConsensus {
         }
     }
 
-    async fn get_pending_transactions(&self) -> Vec<Transaction> {
+    async fn get_pending_transactions(&self) -> Vec<StateTransaction> {
         // 获取待处理的交易
         vec![]
     }
@@ -523,6 +522,8 @@ impl Clone for HotStuffConsensus {
             block_tx: self.block_tx.clone(),
             msg_rx: self.msg_rx.clone(),
             msg_tx: self.msg_tx.clone(),
+            vote_sender: self.vote_sender.clone(),
+            vote_receiver: self.vote_receiver.clone(),
             metrics: self.metrics.clone(),
         }
     }

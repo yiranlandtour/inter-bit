@@ -3,6 +3,9 @@ use tokio::sync::{mpsc, RwLock};
 use std::collections::HashMap;
 use bytes::Bytes;
 use futures::stream::StreamExt;
+use serde::{Deserialize, Serialize};
+use primitive_types::H256;
+use crate::state_machine::transaction::Transaction;
 
 pub struct P2PNetwork {
     node_id: Vec<u8>,
@@ -26,20 +29,20 @@ struct MessageHandler {
 }
 
 pub struct TransactionPool {
-    pending: HashMap<[u8; 32], Transaction>,
+    pending: HashMap<primitive_types::H256, Transaction>,
     queued: HashMap<[u8; 20], Vec<Transaction>>,
     max_size: usize,
     max_per_account: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkMessage {
     msg_type: MessageType,
     payload: Vec<u8>,
     sender: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 enum MessageType {
     Consensus,
     Transaction,
@@ -49,7 +52,7 @@ enum MessageType {
     Pong,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsensusMessage {
     height: u64,
     round: u32,
@@ -57,19 +60,8 @@ pub struct ConsensusMessage {
     data: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Transaction {
-    hash: [u8; 32],
-    from: [u8; 20],
-    to: Option<[u8; 20]>,
-    value: u128,
-    data: Vec<u8>,
-    nonce: u64,
-    gas_limit: u64,
-    gas_price: u128,
-}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
     height: u64,
     hash: [u8; 32],
@@ -265,7 +257,8 @@ impl TransactionPool {
             return false;
         }
         
-        self.pending.insert(tx.hash, tx);
+        let tx_hash = tx.hash();
+        self.pending.insert(tx_hash, tx);
         true
     }
 
@@ -279,14 +272,15 @@ impl TransactionPool {
         txs
     }
 
-    pub fn remove_transaction(&mut self, hash: &[u8; 32]) -> Option<Transaction> {
+    pub fn remove_transaction(&mut self, hash: &H256) -> Option<Transaction> {
         let tx = self.pending.remove(hash);
         
         // 尝试从队列中提升交易
         if let Some(ref tx) = tx {
             if let Some(queued) = self.queued.get_mut(&tx.from) {
                 if let Some(next_tx) = queued.pop() {
-                    self.pending.insert(next_tx.hash, next_tx);
+                    let next_tx_hash = next_tx.hash();
+                    self.pending.insert(next_tx_hash, next_tx);
                 }
             }
         }
