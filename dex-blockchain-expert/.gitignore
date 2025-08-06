@@ -1,0 +1,100 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+/target
+/out
+/build
+/dist
+
+# Test data
+/data/
+/tmp/
+*.db
+*.db-journal
+*.db-wal
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Benchmarks
+/criterion/
+perf.data
+perf.data.old
+flamegraph.svg
+
+# Documentation
+/doc/
+/docs/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# RocksDB
+*.sst
+*.log
+CURRENT
+IDENTITY
+LOCK
+MANIFEST-*
+OPTIONS-*
+LOG*
+
+# Coverage
+*.profraw
+*.profdata
+/coverage/
+lcov.info
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Python (for any scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Node (for any frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Core dumps
+core
+core.*
+
+# Temporary files
+*.tmp
+*.temp
+/temp/
+
+# State storage
+/blockchain_data/
+/state_data/
+*.snapshot
