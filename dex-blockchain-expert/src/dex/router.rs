@@ -1,11 +1,9 @@
 // 智能路由器
 // 负责寻找最优交易路径，最小化滑点和手续费
 
-pub mod smart_routing;
-
 use super::{TradePath, TradeHop, DexError};
 use primitive_types::{H256, U256};
-use smart_routing::{SmartRouter as AdvancedRouter, RoutingConfig, PoolInfo, Protocol};
+use crate::dex::smart_routing::{SmartRouter as AdvancedRouter, RoutingConfig, PoolInfo, Protocol};
 use std::sync::Arc;
 
 pub struct SmartRouter {

@@ -7,6 +7,7 @@ pub mod liquidity;
 pub mod matching_engine;
 pub mod router;
 pub mod mev_protection;
+pub mod smart_routing;
 
 use primitive_types::{H256, U256};
 use serde::{Deserialize, Serialize};

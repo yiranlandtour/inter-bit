@@ -1,7 +1,7 @@
 use super::{
     BatchState, BatchStatus, ExecutionStep, FraudProof, Layer2Config, Layer2Error, Transaction,
 };
-use crate::state_machine::StateTransition;
+// use crate::state_machine::StateTransition;
 use primitive_types::{H256, U256};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -302,7 +302,9 @@ impl OptimisticRollup {
             hasher.update(&tx.id.0);
             hasher.update(&tx.from);
             hasher.update(&tx.to);
-            hasher.update(&tx.value.to_little_endian());
+            let mut value_bytes = [0u8; 32];
+        tx.value.to_little_endian(&mut value_bytes);
+        hasher.update(&value_bytes);
             hasher.update(&tx.data);
         }
         
@@ -357,7 +359,9 @@ impl OptimisticRollup {
         let mut hasher = Keccak256::new();
         hasher.update(&tx.from);
         hasher.update(&tx.to);
-        hasher.update(&tx.value.to_little_endian());
+        let mut value_bytes = [0u8; 32];
+        tx.value.to_little_endian(&mut value_bytes);
+        hasher.update(&value_bytes);
         hasher.update(&tx.nonce.to_le_bytes());
         hasher.update(&tx.data);
         
