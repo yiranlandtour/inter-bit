@@ -178,4 +178,17 @@ pub enum EvmError {
     Reverted(Vec<u8>),
 }
 
+impl std::fmt::Display for EvmError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EvmError::ExecutionFailed(msg) => write!(f, "Execution failed: {}", msg),
+            EvmError::InvalidTransaction(msg) => write!(f, "Invalid transaction: {}", msg),
+            EvmError::OutOfGas => write!(f, "Out of gas"),
+            EvmError::Reverted(data) => write!(f, "Transaction reverted with data: {:?}", data),
+        }
+    }
+}
+
+impl std::error::Error for EvmError {}
+
 pub mod parallel_evm;

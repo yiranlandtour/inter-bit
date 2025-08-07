@@ -230,7 +230,7 @@ pub enum BatchState {
     Invalid,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FraudProof {
     pub batch_id: H256,
     pub invalid_state_root: H256,
@@ -239,7 +239,7 @@ pub struct FraudProof {
     pub execution_trace: Vec<ExecutionStep>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExecutionStep {
     pub pc: u64,
     pub opcode: u8,
@@ -255,7 +255,7 @@ pub struct ChannelState {
     pub merkle_root: H256,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Layer2Error {
     RollupNotInitialized,
     InvalidTransaction,

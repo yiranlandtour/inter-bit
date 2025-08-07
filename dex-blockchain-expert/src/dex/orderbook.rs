@@ -281,7 +281,7 @@ impl OrderBook {
 
         // 获取买单深度
         for (price, orders) in buy_orders.iter().rev().take(levels) {
-            let total_amount: U256 = orders.iter().map(|o| o.amount).sum();
+            let total_amount: U256 = orders.iter().map(|o| o.amount).fold(U256::zero(), |acc, x| acc + x);
             bids.push(PriceLevel {
                 price: *price,
                 amount: total_amount,
@@ -291,7 +291,7 @@ impl OrderBook {
 
         // 获取卖单深度
         for (price, orders) in sell_orders.iter().take(levels) {
-            let total_amount: U256 = orders.iter().map(|o| o.amount).sum();
+            let total_amount: U256 = orders.iter().map(|o| o.amount).fold(U256::zero(), |acc, x| acc + x);
             asks.push(PriceLevel {
                 price: *price,
                 amount: total_amount,

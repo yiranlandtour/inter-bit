@@ -1,4 +1,5 @@
 use super::*;
+use super::StateMachineError as Error;
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crossbeam_channel::{bounded, Sender, Receiver};

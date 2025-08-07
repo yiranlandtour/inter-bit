@@ -378,11 +378,17 @@ impl ThreadLocalPool {
 }
 
 pub fn thread_local_allocate(size: usize) -> Vec<u8> {
-    THREAD_LOCAL_POOL.with(|pool| pool.borrow_mut().allocate(size))
+    THREAD_LOCAL_POOL.with(|pool| {
+        let mut pool_ref = pool.borrow_mut();
+        pool_ref.allocate(size)
+    })
 }
 
 pub fn thread_local_deallocate(vec: Vec<u8>) {
-    THREAD_LOCAL_POOL.with(|pool| pool.borrow_mut().deallocate(vec))
+    THREAD_LOCAL_POOL.with(|pool| {
+        let mut pool_ref = pool.borrow_mut();
+        pool_ref.deallocate(vec);
+    })
 }
 
 /// 固定大小的内存池

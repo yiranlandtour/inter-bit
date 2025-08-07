@@ -303,7 +303,7 @@ impl OptimisticRollup {
             hasher.update(&tx.from);
             hasher.update(&tx.to);
             let mut value_bytes = [0u8; 32];
-        tx.value.to_little_endian(&mut value_bytes);
+            tx.value.to_little_endian(&mut value_bytes);
         hasher.update(&value_bytes);
             hasher.update(&tx.data);
         }
@@ -344,7 +344,9 @@ impl OptimisticRollup {
             hasher.update(&[step.opcode]);
             
             for value in &step.stack {
-                hasher.update(&value.to_little_endian());
+                let mut value_bytes = [0u8; 32];
+                value.to_little_endian(&mut value_bytes);
+                hasher.update(&value_bytes);
             }
             
             hasher.update(&step.memory);

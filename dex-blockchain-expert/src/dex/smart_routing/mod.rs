@@ -57,7 +57,7 @@ pub struct Hop {
     pub reserves: (U256, U256),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Protocol {
     OrderBook,
     AmmV2,
@@ -396,7 +396,9 @@ impl SmartRouter {
         let mut hasher = Keccak256::new();
         hasher.update(&token_in.0);
         hasher.update(&token_out.0);
-        hasher.update(&amount.to_little_endian());
+        let mut amount_bytes = [0u8; 32];
+        amount.to_little_endian(&mut amount_bytes);
+        hasher.update(&amount_bytes);
         
         H256::from_slice(&hasher.finalize())
     }
@@ -457,7 +459,7 @@ impl SmartRouter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RoutingError {
     NoRouteFound,
     NoPoolsAvailable,

@@ -170,7 +170,9 @@ impl CommitRevealScheme {
         hasher.update(&tx.tx_hash.0);
         hasher.update(&tx.sender);
         hasher.update(&tx.nonce.to_le_bytes());
-        hasher.update(&tx.gas_price.to_little_endian().as_slice()[..32]);
+        let mut gas_price_bytes = [0u8; 32];
+        tx.gas_price.to_little_endian(&mut gas_price_bytes);
+        hasher.update(&gas_price_bytes);
         hasher.update(&tx.data);
         hasher.update(&nonce_value.0);
         

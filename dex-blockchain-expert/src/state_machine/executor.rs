@@ -1,4 +1,5 @@
 use super::*;
+use super::StateMachineError as Error;
 use crate::storage::{OptimizedStateStorage, Storage};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -46,7 +47,7 @@ impl HighPerformanceStateMachine {
     pub async fn execute_transactions_parallel(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionReceipt>, Error> {
+    ) -> Result<Vec<TransactionReceipt>, StateMachineError> {
         let start = Instant::now();
         let tx_count = transactions.len();
         
@@ -151,7 +152,7 @@ impl HighPerformanceStateMachine {
     async fn execute_group_parallel(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionReceipt>, Error> {
+    ) -> Result<Vec<TransactionReceipt>, StateMachineError> {
         let tx_count = transactions.len();
         let (tx_sender, tx_receiver) = bounded(tx_count);
         let (receipt_sender, receipt_receiver) = bounded(tx_count);
@@ -209,11 +210,11 @@ impl HighPerformanceStateMachine {
         
         // 扣除发送方余额
         let mut from_account = state_db.get_account(tx.from).await
-            .ok_or(Error::StateNotFound)?;
+            .ok_or(StateMachineError::StateNotFound)?;
         
         let total_cost = U256::from(tx.value) + U256::from(tx.gas_limit) * U256::from(tx.gas_price);
         if from_account.balance < total_cost {
-            return Err(Error::InsufficientBalance);
+            return Err(StateMachineError::InsufficientBalance);
         }
         
         from_account.balance -= total_cost;
@@ -227,7 +228,7 @@ impl HighPerformanceStateMachine {
                 gas_used += Self::estimate_contract_gas(&tx.data);
                 
                 if gas_used > tx.gas_limit {
-                    return Err(Error::GasLimitExceeded);
+                    return Err(StateMachineError::GasLimitExceeded);
                 }
                 
                 // 模拟合约执行产生的状态变化
@@ -250,7 +251,7 @@ impl HighPerformanceStateMachine {
             gas_used += Self::estimate_contract_gas(&tx.data) * 2;
             
             if gas_used > tx.gas_limit {
-                return Err(Error::GasLimitExceeded);
+                return Err(StateMachineError::GasLimitExceeded);
             }
             
             // 计算合约地址
@@ -291,29 +292,29 @@ impl HighPerformanceStateMachine {
     async fn validate_transaction(
         state_db: &Arc<StateDB>,
         tx: &Transaction,
-    ) -> Result<(), Error> {
+    ) -> Result<(), StateMachineError> {
         // 验证签名
         if !tx.verify_signature() {
-            return Err(Error::InvalidTransaction("Invalid signature".to_string()));
+            return Err(StateMachineError::InvalidTransaction("Invalid signature".to_string()));
         }
         
         // 验证nonce
         let account = state_db.get_account(tx.from).await
-            .ok_or(Error::StateNotFound)?;
+            .ok_or(StateMachineError::StateNotFound)?;
         
         if account.nonce != tx.nonce {
-            return Err(Error::InvalidTransaction("Invalid nonce".to_string()));
+            return Err(StateMachineError::InvalidTransaction("Invalid nonce".to_string()));
         }
         
         // 验证余额
         let total_cost = U256::from(tx.value) + U256::from(tx.gas_limit) * U256::from(tx.gas_price);
         if account.balance < total_cost {
-            return Err(Error::InsufficientBalance);
+            return Err(StateMachineError::InsufficientBalance);
         }
         
         // 验证gas限制
         if tx.gas_limit < 21000 {
-            return Err(Error::InvalidTransaction("Gas limit too low".to_string()));
+            return Err(StateMachineError::InvalidTransaction("Gas limit too low".to_string()));
         }
         
         Ok(())
@@ -386,13 +387,13 @@ impl StateMachine for HighPerformanceStateMachine {
         self.state_db.get_storage(address, key).await
     }
 
-    async fn commit_state(&self, block_hash: H256) -> Result<(), Error> {
+    async fn commit_state(&self, block_hash: H256) -> Result<(), StateMachineError> {
         self.state_db.commit(block_hash).await
-            .map_err(|e| Error::StorageError(e.to_string()))
+            .map_err(|e| StateMachineError::StorageError(e.to_string()))
     }
 
-    async fn rollback_state(&self, block_hash: H256) -> Result<(), Error> {
+    async fn rollback_state(&self, block_hash: H256) -> Result<(), StateMachineError> {
         self.state_db.rollback(block_hash).await
-            .map_err(|e| Error::StorageError(e.to_string()))
+            .map_err(|e| StateMachineError::StorageError(e.to_string()))
     }
 }

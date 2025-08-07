@@ -305,7 +305,7 @@ pub struct ShieldNote {
     pub pool_id: H256,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PrivacyError {
     InvalidProof,
     InvalidSignature,

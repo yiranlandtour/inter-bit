@@ -303,7 +303,11 @@ impl ParallelEvmExecutor {
         
         // 2. 预取状态
         let prefetch_keys: Vec<H256> = transactions.iter()
-            .filter_map(|tx| tx.to.map(|addr| H256::from(addr.as_bytes())))
+            .filter_map(|tx| tx.to.map(|addr| {
+                let mut bytes = [0u8; 32];
+                bytes[12..32].copy_from_slice(&addr);
+                H256::from(bytes)
+            }))
             .collect();
         self.state_prefetcher.prefetch(prefetch_keys).await;
         

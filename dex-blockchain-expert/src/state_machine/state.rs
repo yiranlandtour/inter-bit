@@ -42,7 +42,8 @@ impl StateDB {
         }
 
         // 从后端存储加载
-        if let Ok(data) = self.backend.get(&Self::account_key(address)).await {
+        let account_key = Self::account_key(address);
+        if let Ok(data) = self.backend.get(&account_key).await {
             if let Ok(account) = bincode::deserialize::<Account>(&data) {
                 self.accounts.insert(address, account.clone());
                 return Some(account);

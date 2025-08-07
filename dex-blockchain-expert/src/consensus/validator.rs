@@ -49,6 +49,9 @@ impl Validator {
             return false;
         }
         
+        if self.public_key.len() < 32 {
+            return false;
+        }
         let pk_bytes: [u8; 32] = match self.public_key[..32].try_into() {
             Ok(bytes) => bytes,
             Err(_) => return false,

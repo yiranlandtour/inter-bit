@@ -157,7 +157,9 @@ pub async fn create_hash_commitment(amount: U256) -> Result<(Commitment, Vec<u8>
     
     let blinding_factor = vec![rand::random::<u8>(); 32];
     let mut hasher = Keccak256::new();
-    hasher.update(&amount.to_little_endian());
+    let mut amount_bytes = [0u8; 32];
+    amount.to_little_endian(&mut amount_bytes);
+    hasher.update(&amount_bytes);
     hasher.update(&blinding_factor);
     
     Ok((
@@ -188,7 +190,9 @@ fn compute_pedersen(amount: U256, blinding: &[u8]) -> Vec<u8> {
     use sha3::{Digest, Keccak256};
     let mut hasher = Keccak256::new();
     hasher.update(b"PEDERSEN");
-    hasher.update(&amount.to_little_endian());
+    let mut amount_bytes = [0u8; 32];
+    amount.to_little_endian(&mut amount_bytes);
+    hasher.update(&amount_bytes);
     hasher.update(blinding);
     hasher.finalize().to_vec()
 }
@@ -197,7 +201,9 @@ fn compute_polynomial(amount: U256, blinding: &[u8]) -> Vec<u8> {
     use sha3::{Digest, Keccak256};
     let mut hasher = Keccak256::new();
     hasher.update(b"POLYNOMIAL");
-    hasher.update(&amount.to_little_endian());
+    let mut amount_bytes = [0u8; 32];
+    amount.to_little_endian(&mut amount_bytes);
+    hasher.update(&amount_bytes);
     hasher.update(blinding);
     hasher.finalize().to_vec()
 }

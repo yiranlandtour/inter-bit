@@ -553,7 +553,6 @@ pub enum AlertSeverity {
     Critical,
 }
 
-#[derive(Debug, Clone)]
 pub struct AlertRule {
     pub name: String,
     pub condition: Box<dyn Fn(&DashboardData) -> bool + Send + Sync>,

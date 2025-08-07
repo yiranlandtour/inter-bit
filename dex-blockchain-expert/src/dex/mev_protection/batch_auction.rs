@@ -11,19 +11,19 @@ pub struct BatchOrder {
     pub tx: ProtectedTransaction,
     pub bid_price: U256,
     pub priority_fee: U256,
-    pub submission_time: Instant,
+    pub submission_time: u64, // Changed from Instant to u64 timestamp
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Batch {
     pub id: H256,
     pub orders: Vec<BatchOrder>,
-    pub start_time: Instant,
-    pub end_time: Instant,
+    pub start_time: u64, // Changed from Instant to u64 timestamp
+    pub end_time: u64, // Changed from Instant to u64 timestamp
     pub status: BatchStatus,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BatchStatus {
     Collecting,
     Sealed,
@@ -62,7 +62,10 @@ impl BatchAuctionManager {
         let order = BatchOrder {
             bid_price: tx.gas_price,
             priority_fee: self.calculate_priority_fee(&tx),
-            submission_time: Instant::now(),
+            submission_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64,
             tx,
         };
 
@@ -101,7 +104,10 @@ impl BatchAuctionManager {
             let results = self.execute_ordered_transactions(ordered_txs.clone()).await?;
             
             batch.status = BatchStatus::Completed;
-            batch.end_time = Instant::now();
+            batch.end_time = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64;
             
             let mut executed = self.executed_batches.write().await;
             executed.insert(batch.id, batch);
@@ -167,8 +173,13 @@ impl BatchAuctionManager {
 
     async fn should_seal_batch(&self, current: &Option<Batch>) -> bool {
         if let Some(batch) = current {
-            let elapsed = Instant::now() - batch.start_time;
-            elapsed >= self.batch_interval || batch.orders.len() >= self.max_batch_size
+            let current_time = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64;
+            let elapsed_ns = current_time - batch.start_time;
+            let elapsed_duration = std::time::Duration::from_nanos(elapsed_ns);
+            elapsed_duration >= self.batch_interval || batch.orders.len() >= self.max_batch_size
         } else {
             false
         }
@@ -191,8 +202,14 @@ impl BatchAuctionManager {
         *current = Some(Batch {
             id: batch_id,
             orders,
-            start_time: Instant::now(),
-            end_time: Instant::now(),
+            start_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64,
+            end_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64,
             status: BatchStatus::Collecting,
         });
 
@@ -259,7 +276,7 @@ impl BatchAuctionManager {
                 .orders
                 .iter()
                 .fold(U256::zero(), |acc, o| acc + o.bid_price),
-            execution_time: batch.end_time - batch.start_time,
+            execution_time: (batch.end_time - batch.start_time) / 1_000_000, // Convert nanoseconds to milliseconds
             status: batch.status.clone(),
         })
     }
@@ -282,7 +299,7 @@ pub struct BatchInfo {
     pub id: H256,
     pub size: usize,
     pub total_value: U256,
-    pub execution_time: Duration,
+    pub execution_time: u64, // Changed from Duration to u64 milliseconds
     pub status: BatchStatus,
 }
 

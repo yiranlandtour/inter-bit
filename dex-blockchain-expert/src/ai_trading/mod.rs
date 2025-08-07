@@ -18,7 +18,7 @@ pub struct AIConfig {
     pub rebalance_frequency: u64, // seconds
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ModelType {
     LSTM,
     Transformer,

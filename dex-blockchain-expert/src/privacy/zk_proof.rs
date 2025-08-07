@@ -75,9 +75,10 @@ impl ZkProver {
 
     async fn generate_bulletproof(&self, amount: U256) -> Result<ZkProof, PrivacyError> {
         // Bulletproofs for range proofs
-        let amount_bytes = amount.to_little_endian();
+        let mut amount_bytes = [0u8; 32];
+        amount.to_little_endian(&mut amount_bytes);
         Ok(ZkProof {
-            pi_a: amount_bytes[..32].to_vec(),
+            pi_a: amount_bytes.to_vec(),
             pi_b: vec![0u8; 64],
             pi_c: vec![0u8; 32],
             public_inputs: vec![],

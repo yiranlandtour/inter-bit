@@ -197,7 +197,9 @@ impl Bridge {
         let mut hasher = Keccak256::new();
         hasher.update(owner);
         hasher.update(&token.0);
-        hasher.update(&amount.to_little_endian());
+        let mut amount_bytes = [0u8; 32];
+        amount.to_little_endian(&mut amount_bytes);
+        hasher.update(&amount_bytes);
         hasher.update(&self.get_current_timestamp().to_le_bytes());
         
         H256::from_slice(&hasher.finalize())

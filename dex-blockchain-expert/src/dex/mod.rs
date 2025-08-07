@@ -206,7 +206,7 @@ pub struct Order {
     pub expiry: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OrderType {
     Market,
     Limit,
@@ -215,7 +215,7 @@ pub enum OrderType {
     IcebergOrder { visible_amount: U256 },
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OrderSide {
     Buy,
     Sell,

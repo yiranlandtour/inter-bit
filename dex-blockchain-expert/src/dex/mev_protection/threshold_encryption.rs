@@ -179,7 +179,9 @@ impl ThresholdEncryptionSystem {
         let mut data = Vec::new();
         data.extend_from_slice(&tx.sender);
         data.extend_from_slice(&tx.nonce.to_le_bytes());
-        data.extend_from_slice(&tx.gas_price.to_little_endian().as_slice()[..32]);
+        let mut gas_price_bytes = [0u8; 32];
+        tx.gas_price.to_little_endian(&mut gas_price_bytes);
+        data.extend_from_slice(&gas_price_bytes);
         data.extend_from_slice(&tx.data);
         
         self.threshold_encrypt(data).await

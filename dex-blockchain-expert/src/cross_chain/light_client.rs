@@ -195,12 +195,15 @@ impl LightClient {
             return false;
         }
 
-        let Ok(sig) = Signature::from_bytes(signature.try_into().unwrap()) else {
-            return false;
+        let sig_array: [u8; 64] = match signature.try_into() {
+            Ok(arr) => arr,
+            Err(_) => return false,
         };
+        let sig = Signature::from_bytes(&sig_array);
 
-        let Ok(key) = VerifyingKey::from_bytes(public_key.try_into().unwrap()) else {
-            return false;
+        let key = match VerifyingKey::from_bytes(public_key.try_into().unwrap()) {
+            Ok(key) => key,
+            Err(_) => return false,
         };
 
         key.verify(&message.0, &sig).is_ok()

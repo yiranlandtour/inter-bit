@@ -240,7 +240,7 @@ impl CrossChainManager {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CrossChainError {
     ChainNotSupported,
     InvalidProof,

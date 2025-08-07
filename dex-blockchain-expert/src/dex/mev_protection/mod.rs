@@ -10,24 +10,24 @@ use std::time::Duration;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MevProtectionConfig {
     pub batch_auction_enabled: bool,
-    pub batch_interval: Duration,
+    pub batch_interval_ms: u64, // Changed from Duration to u64 milliseconds
     pub threshold_encryption_enabled: bool,
     pub encryption_threshold: usize,
     pub private_pool_enabled: bool,
     pub commit_reveal_enabled: bool,
-    pub reveal_timeout: Duration,
+    pub reveal_timeout_ms: u64, // Changed from Duration to u64 milliseconds
 }
 
 impl Default for MevProtectionConfig {
     fn default() -> Self {
         Self {
             batch_auction_enabled: true,
-            batch_interval: Duration::from_millis(100),
+            batch_interval_ms: 100,
             threshold_encryption_enabled: true,
             encryption_threshold: 3,
             private_pool_enabled: true,
             commit_reveal_enabled: true,
-            reveal_timeout: Duration::from_secs(10),
+            reveal_timeout_ms: 10000,
         }
     }
 }
@@ -43,7 +43,7 @@ pub struct ProtectedTransaction {
     pub timestamp: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ProtectionType {
     BatchAuction,
     ThresholdEncrypted,
@@ -52,7 +52,7 @@ pub enum ProtectionType {
     None,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MevProtectionError {
     BatchAuctionFailed(String),
     EncryptionFailed(String),
@@ -62,6 +62,22 @@ pub enum MevProtectionError {
     InvalidCommitment,
     PrivatePoolAccessDenied,
 }
+
+impl std::fmt::Display for MevProtectionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MevProtectionError::BatchAuctionFailed(msg) => write!(f, "Batch auction failed: {}", msg),
+            MevProtectionError::EncryptionFailed(msg) => write!(f, "Encryption failed: {}", msg),
+            MevProtectionError::DecryptionFailed(msg) => write!(f, "Decryption failed: {}", msg),
+            MevProtectionError::ThresholdNotMet => write!(f, "Threshold not met"),
+            MevProtectionError::RevealTimeout => write!(f, "Reveal timeout"),
+            MevProtectionError::InvalidCommitment => write!(f, "Invalid commitment"),
+            MevProtectionError::PrivatePoolAccessDenied => write!(f, "Private pool access denied"),
+        }
+    }
+}
+
+impl std::error::Error for MevProtectionError {}
 
 pub struct MevProtectionSystem {
     config: MevProtectionConfig,
@@ -75,12 +91,16 @@ impl MevProtectionSystem {
     pub fn new(config: MevProtectionConfig) -> Self {
         Self {
             config: config.clone(),
-            batch_auction: batch_auction::BatchAuctionManager::new(config.batch_interval),
+            batch_auction: batch_auction::BatchAuctionManager::new(
+                Duration::from_millis(config.batch_interval_ms)
+            ),
             threshold_encryption: threshold_encryption::ThresholdEncryptionSystem::new(
                 config.encryption_threshold,
             ),
             private_pool: private_pool::PrivateTransactionPool::new(),
-            commit_reveal: commit_reveal::CommitRevealScheme::new(config.reveal_timeout),
+            commit_reveal: commit_reveal::CommitRevealScheme::new(
+                Duration::from_millis(config.reveal_timeout_ms)
+            ),
         }
     }
 

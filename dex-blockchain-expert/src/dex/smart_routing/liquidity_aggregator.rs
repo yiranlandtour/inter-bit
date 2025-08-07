@@ -253,10 +253,10 @@ impl LiquidityAggregator {
 
     fn calculate_sqrt_price(&self, reserve_a: U256, reserve_b: U256) -> U256 {
         if reserve_a == U256::zero() || reserve_b == U256::zero() {
-            return U256::from(1u64 << 96);
+            return U256::from(2u128.pow(96));
         }
         
-        let ratio = (reserve_b * U256::from(1u64 << 96)) / reserve_a;
+        let ratio = (reserve_b * U256::from(2u128.pow(96))) / reserve_a;
         self.sqrt(ratio)
     }
 
@@ -281,8 +281,8 @@ impl LiquidityAggregator {
             return U256::zero();
         }
         
-        let liquidity_a = reserve_a * sqrt_price / U256::from(1u64 << 96);
-        let liquidity_b = reserve_b * U256::from(1u64 << 96) / sqrt_price;
+        let liquidity_a = reserve_a * sqrt_price / U256::from(2u128.pow(96));
+        let liquidity_b = reserve_b * U256::from(2u128.pow(96)) / sqrt_price;
         
         liquidity_a.min(liquidity_b)
     }
@@ -299,10 +299,10 @@ impl LiquidityAggregator {
         }
         
         if zero_for_one {
-            let delta = (amount * U256::from(1u64 << 96)) / liquidity;
+            let delta = (amount * U256::from(2u128.pow(96))) / liquidity;
             sqrt_price_current.saturating_sub(delta)
         } else {
-            let delta = (amount * U256::from(1u64 << 96)) / liquidity;
+            let delta = (amount * U256::from(2u128.pow(96))) / liquidity;
             sqrt_price_current + delta
         }
     }
@@ -324,7 +324,7 @@ impl LiquidityAggregator {
             sqrt_price_end - sqrt_price_start
         };
         
-        (liquidity * delta) / U256::from(1u64 << 96)
+        (liquidity * delta) / U256::from(2u128.pow(96))
     }
 
     fn calculate_d(&self, x: U256, y: U256, amp: U256) -> U256 {

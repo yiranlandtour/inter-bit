@@ -117,16 +117,6 @@ impl Transaction {
     }
 }
 
-impl Default for TransactionSignature {
-    fn default() -> Self {
-        Self {
-            v: 0,
-            r: [0; 32],
-            s: [0; 32],
-        }
-    }
-}
-
 impl TransactionReceipt {
     pub fn is_success(&self) -> bool {
         self.status
