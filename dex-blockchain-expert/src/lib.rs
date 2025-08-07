@@ -7,6 +7,7 @@ pub mod optimization;
 pub mod monitoring;
 pub mod dex;
 pub mod cross_chain;
+pub mod layer2;
 
 pub use consensus::tendermint::TendermintConsensus;
 pub use state_machine::HighPerformanceStateMachine;
