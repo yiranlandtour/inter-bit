@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use dashmap::DashMap;
 use crate::storage::OptimizedStateStorage;
+use rand::Rng;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Account {
@@ -200,7 +201,7 @@ impl StateDB {
             }
             // 这里应该根据访问时间来决定驱逐哪些条目
             // 简化处理：随机驱逐
-            if rand::random::<bool>() {
+            if rand::thread_rng().gen::<bool>() {
                 self.accounts.remove(entry.key());
                 removed += 1;
             }

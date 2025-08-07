@@ -3,6 +3,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
+use rand::Rng;
 
 // 监控和性能分析工具
 // 核心功能：
@@ -261,8 +262,8 @@ impl PerformanceProfiler {
                     "consensus::run".to_string(),
                     "state_machine::execute".to_string(),
                 ],
-                cpu_time_us: rand::random::<u64>() % 1000,
-                memory_bytes: rand::random::<u64>() % 1000000,
+                cpu_time_us: rand::thread_rng().gen::<u64>() % 1000,
+                memory_bytes: rand::thread_rng().gen::<u64>() % 1000000,
             };
             
             // 更新profile
@@ -335,7 +336,7 @@ pub struct LatencyTracker {
     active_spans: Arc<RwLock<HashMap<String, Span>>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Span {
     pub trace_id: String,
     pub span_id: String,
@@ -344,6 +345,35 @@ pub struct Span {
     pub start_time: Instant,
     pub duration: Option<Duration>,
     pub tags: HashMap<String, String>,
+}
+
+// Serializable version of Span for data transfer
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SerializableSpan {
+    pub trace_id: String,
+    pub span_id: String,
+    pub parent_id: Option<String>,
+    pub operation: String,
+    pub start_time_us: u64, // microseconds since UNIX_EPOCH
+    pub duration_us: Option<u64>,
+    pub tags: HashMap<String, String>,
+}
+
+impl From<&Span> for SerializableSpan {
+    fn from(span: &Span) -> Self {
+        Self {
+            trace_id: span.trace_id.clone(),
+            span_id: span.span_id.clone(),
+            parent_id: span.parent_id.clone(),
+            operation: span.operation.clone(),
+            start_time_us: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_micros() as u64,
+            duration_us: span.duration.map(|d| d.as_micros() as u64),
+            tags: span.tags.clone(),
+        }
+    }
 }
 
 impl LatencyTracker {
@@ -355,8 +385,8 @@ impl LatencyTracker {
     }
 
     pub async fn start_span(&self, operation: String) -> String {
-        let span_id = format!("{:x}", rand::random::<u64>());
-        let trace_id = format!("{:x}", rand::random::<u64>());
+        let span_id = format!("{:x}", rand::thread_rng().gen::<u64>());
+        let trace_id = format!("{:x}", rand::thread_rng().gen::<u64>());
         
         let span = Span {
             trace_id: trace_id.clone(),
@@ -501,12 +531,12 @@ impl ResourceMonitor {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
-            cpu_percent: rand::random::<f64>() * 100.0,
-            memory_bytes: rand::random::<u64>() % (4 * 1024 * 1024 * 1024), // 4GB max
-            disk_io_bytes: rand::random::<u64>() % (100 * 1024 * 1024), // 100MB/s max
-            network_io_bytes: rand::random::<u64>() % (1000 * 1024 * 1024), // 1GB/s max
-            goroutines: rand::random::<u32>() % 10000,
-            file_descriptors: rand::random::<u32>() % 65536,
+            cpu_percent: rand::thread_rng().gen::<f64>() * 100.0,
+            memory_bytes: rand::thread_rng().gen::<u64>() % (4 * 1024 * 1024 * 1024), // 4GB max
+            disk_io_bytes: rand::thread_rng().gen::<u64>() % (100 * 1024 * 1024), // 100MB/s max
+            network_io_bytes: rand::thread_rng().gen::<u64>() % (1000 * 1024 * 1024), // 1GB/s max
+            goroutines: rand::thread_rng().gen::<u32>() % 10000,
+            file_descriptors: rand::thread_rng().gen::<u32>() % 65536,
         }
     }
 
@@ -584,7 +614,7 @@ impl AlertManager {
 
     pub async fn trigger_alert(&self, severity: AlertSeverity, message: String) {
         let alert = Alert {
-            id: format!("{:x}", rand::random::<u64>()),
+            id: format!("{:x}", rand::thread_rng().gen::<u64>()),
             severity,
             message,
             timestamp: SystemTime::now()

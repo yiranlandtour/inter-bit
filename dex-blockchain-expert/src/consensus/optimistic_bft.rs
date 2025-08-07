@@ -584,8 +584,16 @@ impl OptimisticBFT {
             let mut conditions = self.network_conditions.write().await;
             
             // 模拟网络监控（实际应该测量真实网络）
-            conditions.avg_latency_ms = 10 + (rand::random::<u64>() % 20);
-            conditions.packet_loss_rate = (rand::random::<f64>() * 0.01).min(0.01);
+            conditions.avg_latency_ms = {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                10 + (rng.gen::<u64>() % 20)
+            };
+            conditions.packet_loss_rate = {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                (rng.gen::<f64>() * 0.01).min(0.01)
+            };
             conditions.stability_score = 1.0 - conditions.packet_loss_rate - 
                                         (conditions.avg_latency_ms as f64 / 100.0);
             

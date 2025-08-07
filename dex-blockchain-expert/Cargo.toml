@@ -33,9 +33,10 @@ memmap2 = "0.9"
 libc = "0.2"
 
 [[bench]]
-name = "consensus_bench"
+name = "performance_bench"
 harness = false
 
-[[bench]]
-name = "state_machine_bench"
-harness = false
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+proptest = "1.4"
+quickcheck = "1.0"

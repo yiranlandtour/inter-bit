@@ -138,7 +138,11 @@ impl MerkleTree {
 }
 
 pub async fn create_pedersen_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
-    let blinding_factor = vec![rand::random::<u8>(); 32];
+    let blinding_factor = {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        (0..32).map(|_| rng.gen()).collect()
+    };
     
     // Simplified Pedersen commitment: C = g^amount * h^blinding
     let commitment_value = compute_pedersen(amount, &blinding_factor);
@@ -155,7 +159,11 @@ pub async fn create_pedersen_commitment(amount: U256) -> Result<(Commitment, Vec
 pub async fn create_hash_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
     use sha3::{Digest, Keccak256};
     
-    let blinding_factor = vec![rand::random::<u8>(); 32];
+    let blinding_factor = {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        (0..32).map(|_| rng.gen()).collect()
+    };
     let mut hasher = Keccak256::new();
     let mut amount_bytes = [0u8; 32];
     amount.to_little_endian(&mut amount_bytes);
@@ -172,7 +180,11 @@ pub async fn create_hash_commitment(amount: U256) -> Result<(Commitment, Vec<u8>
 }
 
 pub async fn create_polynomial_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
-    let blinding_factor = vec![rand::random::<u8>(); 32];
+    let blinding_factor = {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        (0..32).map(|_| rng.gen()).collect()
+    };
     
     // Simplified polynomial commitment
     let commitment_value = compute_polynomial(amount, &blinding_factor);

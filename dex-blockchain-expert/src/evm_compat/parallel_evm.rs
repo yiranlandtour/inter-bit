@@ -3,6 +3,7 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, Mutex};
 use primitive_types::{H160, H256, U256};
 use futures::future::join_all;
+use rand::Rng;
 
 // 智能合约并行执行优化
 // 核心技术：
@@ -351,7 +352,7 @@ impl ParallelEvmExecutor {
         }
         
         // 选择执行器
-        let executor = &self.executors[rand::random::<usize>() % self.worker_count];
+        let executor = &self.executors[rand::thread_rng().gen::<usize>() % self.worker_count];
         
         // 执行交易
         let result = self.execute_on_worker(executor, tx).await;

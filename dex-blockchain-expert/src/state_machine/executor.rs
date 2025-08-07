@@ -194,7 +194,7 @@ impl HighPerformanceStateMachine {
         Ok(receipts)
     }
 
-    async fn execute_single_transaction(
+    pub async fn execute_single_transaction(
         state_db: &Arc<StateDB>,
         tx: Transaction,
     ) -> Result<TransactionReceipt, Error> {

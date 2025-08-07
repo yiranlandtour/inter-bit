@@ -32,7 +32,11 @@ impl StealthAddressManager {
     }
 
     fn generate_ephemeral_key(&self) -> Vec<u8> {
-        vec![rand::random::<u8>(); 32]
+        {
+            use rand::Rng;
+            let mut rng = rand::thread_rng();
+            (0..32).map(|_| rng.gen()).collect()
+        }
     }
 
     fn compute_shared_secret(&self, ephemeral_key: &[u8], recipient: [u8; 20]) -> Vec<u8> {

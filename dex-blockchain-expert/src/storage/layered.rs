@@ -1,6 +1,7 @@
 use super::*;
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::time::sleep;
 use parking_lot::Mutex;
 
@@ -440,5 +441,3 @@ pub struct StorageStatsSummary {
     pub avg_write_latency_us: u64,
     pub memory_usage_bytes: usize,
 }
-
-use std::sync::atomic::{AtomicU64, Ordering};

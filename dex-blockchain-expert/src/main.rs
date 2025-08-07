@@ -61,8 +61,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // 转换交易格式
             let transactions: Vec<_> = block.transactions.into_iter()
                 .map(|tx| {
-                    use dex_blockchain_expert::state_machine::Transaction;
-                    Transaction::new(
+                    use dex_blockchain_expert::state_machine::transaction::Transaction;
+                    use dex_blockchain_expert::state_machine::transaction::TransactionSignature;
+                    
+                    let mut transaction = Transaction::new(
                         tx.from,
                         tx.to,
                         tx.value,
@@ -70,7 +72,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         tx.nonce,
                         tx.gas_limit,
                         tx.gas_price,
-                    )
+                    );
+                    
+                    // Convert the signature format
+                    if tx.signature.len() >= 65 {
+                        transaction.signature = TransactionSignature {
+                            v: tx.signature[64],
+                            r: {
+                                let mut r = [0u8; 32];
+                                r.copy_from_slice(&tx.signature[0..32]);
+                                r
+                            },
+                            s: {
+                                let mut s = [0u8; 32];
+                                s.copy_from_slice(&tx.signature[32..64]);
+                                s
+                            },
+                        };
+                    }
+                    
+                    transaction
                 })
                 .collect();
 
@@ -150,18 +171,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         loop {
             sleep(Duration::from_millis(100)).await;
             
-            use dex_blockchain_expert::network::Transaction;
+            use dex_blockchain_expert::consensus::tendermint::Transaction;
             
             // 生成随机交易
             let tx = Transaction {
-                hash: [0; 32], // 会被重新计算
+                nonce,
                 from: [0; 20],
                 to: Some([1; 20]),
                 value: 1000,
                 data: vec![],
-                nonce,
                 gas_limit: 21000,
                 gas_price: 1,
+                signature: vec![0u8; 65], // Placeholder signature
             };
             
             network_tx.broadcast_transaction(tx).await;

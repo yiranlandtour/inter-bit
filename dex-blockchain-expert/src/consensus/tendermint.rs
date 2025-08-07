@@ -36,6 +36,57 @@ pub struct Transaction {
     pub signature: Vec<u8>,
 }
 
+impl Block {
+    pub fn hash(&self) -> [u8; 32] {
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(&self.height.to_be_bytes());
+        hasher.update(&self.timestamp.to_be_bytes());
+        hasher.update(&self.previous_hash);
+        hasher.update(&self.state_root);
+        hasher.update(&self.proposer);
+        
+        for tx in &self.transactions {
+            hasher.update(&tx.nonce.to_be_bytes());
+            hasher.update(&tx.from);
+            if let Some(to) = tx.to {
+                hasher.update(&to);
+            }
+            hasher.update(&tx.value.to_be_bytes());
+            hasher.update(&tx.data);
+            hasher.update(&tx.gas_limit.to_be_bytes());
+            hasher.update(&tx.gas_price.to_be_bytes());
+            hasher.update(&tx.signature);
+        }
+        
+        let result = hasher.finalize();
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&result);
+        hash
+    }
+}
+
+impl Transaction {
+    pub fn hash(&self) -> [u8; 32] {
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(&self.nonce.to_be_bytes());
+        hasher.update(&self.from);
+        if let Some(to) = self.to {
+            hasher.update(&to);
+        }
+        hasher.update(&self.value.to_be_bytes());
+        hasher.update(&self.data);
+        hasher.update(&self.gas_limit.to_be_bytes());
+        hasher.update(&self.gas_price.to_be_bytes());
+        
+        let result = hasher.finalize();
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&result);
+        hash
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConsensusState {
     NewHeight,

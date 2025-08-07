@@ -6,6 +6,7 @@ use primitive_types::{H256, U256};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use rand::Rng;
 
 /// 订单簿
 pub struct OrderBook {
@@ -377,7 +378,7 @@ impl OrderBook {
         hasher.update(order.token_a.as_bytes());
         hasher.update(order.token_b.as_bytes());
         hasher.update(&order.timestamp.to_le_bytes());
-        hasher.update(&rand::random::<[u8; 8]>());
+        hasher.update(&rand::thread_rng().gen::<[u8; 8]>());
         
         H256::from_slice(&hasher.finalize())
     }

@@ -8,6 +8,10 @@ pub mod monitoring;
 pub mod dex;
 pub mod cross_chain;
 pub mod layer2;
+pub mod privacy;
+pub mod defi;
+pub mod ai_trading;
+pub mod security;
 
 pub use consensus::tendermint::TendermintConsensus;
 pub use state_machine::HighPerformanceStateMachine;

@@ -5,7 +5,7 @@ use bytes::Bytes;
 use futures::stream::StreamExt;
 use serde::{Deserialize, Serialize};
 use primitive_types::H256;
-use crate::state_machine::transaction::Transaction;
+use crate::consensus::tendermint::Transaction;
 
 pub struct P2PNetwork {
     node_id: Vec<u8>,
