@@ -98,3 +98,5 @@ core.*
 /blockchain_data/
 /state_data/
 *.snapshot
+!README.md
+*.md
