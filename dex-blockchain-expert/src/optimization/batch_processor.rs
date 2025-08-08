@@ -164,16 +164,16 @@ where
                     // 获取许可并处理
                     let permit = semaphore.acquire().await.unwrap();
                     let processor = processor.clone();
-                    let metrics = metrics.clone();
+                    let metrics_clone = metrics.clone();
                     
                     tokio::spawn(async move {
-                        let items: Vec<T> = batch.into_iter()
-                            .map(|b| b.item)
-                            .collect();
+                        let mut items = Vec::new();
+                        let mut responses = Vec::new();
                         
-                        let responses: Vec<tokio::sync::oneshot::Sender<R>> = batch.into_iter()
-                            .map(|b| b.response)
-                            .collect();
+                        for batch_item in batch {
+                            items.push(batch_item.item);
+                            responses.push(batch_item.response);
+                        }
                         
                         let results = processor(items);
                         
@@ -182,16 +182,16 @@ where
                         }
                         
                         // 更新指标
-                        metrics.total_batches.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                        metrics.total_items.fetch_add(batch_size as u64, std::sync::atomic::Ordering::Relaxed);
+                        metrics_clone.total_batches.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        metrics_clone.total_items.fetch_add(batch_size as u64, std::sync::atomic::Ordering::Relaxed);
                         
-                        let current_avg = metrics.avg_batch_size.load(std::sync::atomic::Ordering::Relaxed);
+                        let current_avg = metrics_clone.avg_batch_size.load(std::sync::atomic::Ordering::Relaxed);
                         let new_avg = (current_avg * 9 + batch_size as u64) / 10;
-                        metrics.avg_batch_size.store(new_avg, std::sync::atomic::Ordering::Relaxed);
+                        metrics_clone.avg_batch_size.store(new_avg, std::sync::atomic::Ordering::Relaxed);
                         
-                        let current_wait = metrics.avg_wait_time_ms.load(std::sync::atomic::Ordering::Relaxed);
+                        let current_wait = metrics_clone.avg_wait_time_ms.load(std::sync::atomic::Ordering::Relaxed);
                         let new_wait = (current_wait * 9 + wait_time) / 10;
-                        metrics.avg_wait_time_ms.store(new_wait, std::sync::atomic::Ordering::Relaxed);
+                        metrics_clone.avg_wait_time_ms.store(new_wait, std::sync::atomic::Ordering::Relaxed);
                         
                         drop(permit);
                     });

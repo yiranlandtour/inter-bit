@@ -257,7 +257,7 @@ impl TransactionPool {
             return false;
         }
         
-        let tx_hash = tx.hash();
+        let tx_hash = H256::from(tx.hash());
         self.pending.insert(tx_hash, tx);
         true
     }
@@ -279,7 +279,7 @@ impl TransactionPool {
         if let Some(ref tx) = tx {
             if let Some(queued) = self.queued.get_mut(&tx.from) {
                 if let Some(next_tx) = queued.pop() {
-                    let next_tx_hash = next_tx.hash();
+                    let next_tx_hash = H256::from(next_tx.hash());
                     self.pending.insert(next_tx_hash, next_tx);
                 }
             }

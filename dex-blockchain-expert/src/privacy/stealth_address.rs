@@ -15,7 +15,7 @@ impl StealthAddressManager {
     pub async fn generate_stealth_address(&self, recipient: [u8; 20]) -> Result<StealthAddress, PrivacyError> {
         let ephemeral_key = self.generate_ephemeral_key();
         let shared_secret = self.compute_shared_secret(&ephemeral_key, recipient);
-        let stealth_pubkey = self.derive_stealth_pubkey(recipient, shared_secret);
+        let stealth_pubkey = self.derive_stealth_pubkey(recipient, &shared_secret);
         let view_tag = self.compute_view_tag(&shared_secret);
 
         Ok(StealthAddress {
@@ -47,11 +47,11 @@ impl StealthAddressManager {
         hasher.finalize().to_vec()
     }
 
-    fn derive_stealth_pubkey(&self, recipient: [u8; 20], shared_secret: Vec<u8>) -> Vec<u8> {
+    fn derive_stealth_pubkey(&self, recipient: [u8; 20], shared_secret: &[u8]) -> Vec<u8> {
         use sha3::{Digest, Keccak256};
         let mut hasher = Keccak256::new();
         hasher.update(&recipient);
-        hasher.update(&shared_secret);
+        hasher.update(shared_secret);
         hasher.finalize()[..20].to_vec()
     }
 

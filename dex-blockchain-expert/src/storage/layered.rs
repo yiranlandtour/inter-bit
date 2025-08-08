@@ -193,10 +193,10 @@ impl OptimizedStateStorage {
         let mut batch = self.ssd_storage.write_batch.lock();
         
         if batch.len() > 0 {
-            self.ssd_storage.db.write(batch.clone())
+            let batch_to_write = std::mem::replace(&mut *batch, WriteBatch::default());
+            self.ssd_storage.db.write(batch_to_write)
                 .map_err(|e| StorageError::DatabaseError(e.to_string()))?;
             
-            *batch = WriteBatch::default();
             *self.ssd_storage.batch_counter.lock() = 0;
         }
         
@@ -301,9 +301,9 @@ impl Storage for OptimizedStateStorage {
         *counter += 1;
         
         if *counter >= BATCH_WRITE_SIZE {
-            self.ssd_storage.db.write(batch.clone())
+            let batch_to_write = std::mem::replace(&mut *batch, WriteBatch::default());
+            self.ssd_storage.db.write(batch_to_write)
                 .map_err(|e| StorageError::DatabaseError(e.to_string()))?;
-            *batch = WriteBatch::default();
             *counter = 0;
         }
         
@@ -376,6 +376,37 @@ impl Storage for OptimizedStateStorage {
         }
         
         Ok(results)
+    }
+}
+
+#[async_trait]
+impl Storage for Arc<OptimizedStateStorage> {
+    async fn get(&self, key: &str) -> Result<Vec<u8>, StorageError> {
+        self.as_ref().get(key).await
+    }
+    
+    async fn put(&self, key: &str, value: &[u8]) -> Result<(), StorageError> {
+        self.as_ref().put(key, value).await
+    }
+    
+    async fn delete(&self, key: &str) -> Result<(), StorageError> {
+        self.as_ref().delete(key).await
+    }
+    
+    async fn batch_put(&self, items: Vec<(String, Vec<u8>)>) -> Result<(), StorageError> {
+        self.as_ref().batch_put(items).await
+    }
+    
+    async fn batch_delete(&self, keys: Vec<String>) -> Result<(), StorageError> {
+        self.as_ref().batch_delete(keys).await
+    }
+    
+    async fn contains(&self, key: &str) -> Result<bool, StorageError> {
+        self.as_ref().contains(key).await
+    }
+    
+    async fn iter_prefix(&self, prefix: &str) -> Result<Vec<(String, Vec<u8>)>, StorageError> {
+        self.as_ref().iter_prefix(prefix).await
     }
 }
 

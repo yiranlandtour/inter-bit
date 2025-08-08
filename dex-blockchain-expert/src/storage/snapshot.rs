@@ -33,7 +33,7 @@ pub struct Snapshot {
     pub metadata: SnapshotMetadata,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AccountSnapshot {
     pub nonce: u64,
     pub balance: U256,

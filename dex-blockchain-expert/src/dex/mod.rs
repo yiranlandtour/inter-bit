@@ -36,7 +36,7 @@ impl DexEngine {
     /// 创建限价订单
     pub async fn place_limit_order(&self, order: Order) -> Result<H256, DexError> {
         // 验证订单
-        self.validate_order(&order)?;
+        self.validate_order(&order).await?;
         
         // 添加到订单簿
         let order_id = self.orderbook.add_order(order.clone()).await?;

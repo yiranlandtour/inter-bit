@@ -287,7 +287,7 @@ impl StrategyEngine {
 
         match strategy {
             StrategyType::MomentumTrading => {
-                let momentum = (last_price - prev_price) / prev_price;
+                let momentum = (*last_price - prev_price) / prev_price;
                 if momentum > 0.02 {
                     TradeAction::Buy
                 } else if momentum < -0.02 {
@@ -298,9 +298,9 @@ impl StrategyEngine {
             }
             StrategyType::MeanReversion => {
                 let mean = prices.iter().sum::<f64>() / prices.len() as f64;
-                if last_price < mean * 0.95 {
+                if *last_price < mean * 0.95 {
                     TradeAction::Buy
-                } else if last_price > mean * 1.05 {
+                } else if *last_price > mean * 1.05 {
                     TradeAction::Sell
                 } else {
                     TradeAction::Hold

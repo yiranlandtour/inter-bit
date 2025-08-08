@@ -247,6 +247,8 @@ impl ParallelExecutor {
         let (tx_sender, tx_receiver) = bounded(batch.len());
         let (result_sender, result_receiver) = bounded(batch.len());
         
+        let batch_len = batch.len();
+        
         // 发送任务
         for task in batch {
             tx_sender.send(task).unwrap();
@@ -255,7 +257,7 @@ impl ParallelExecutor {
         
         // 启动工作线程
         let mut handles = Vec::new();
-        for _ in 0..self.worker_count.min(batch.len()) {
+        for _ in 0..self.worker_count.min(batch_len) {
             let tx_receiver = tx_receiver.clone();
             let result_sender = result_sender.clone();
             let state_db = state_db.clone();

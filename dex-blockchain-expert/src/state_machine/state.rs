@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use dashmap::DashMap;
-use crate::storage::OptimizedStateStorage;
+use crate::storage::{OptimizedStateStorage, Storage};
 use rand::Rng;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

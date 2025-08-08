@@ -138,7 +138,7 @@ impl MerkleTree {
 }
 
 pub async fn create_pedersen_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
-    let blinding_factor = {
+    let blinding_factor: Vec<u8> = {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32).map(|_| rng.gen()).collect()
@@ -159,7 +159,7 @@ pub async fn create_pedersen_commitment(amount: U256) -> Result<(Commitment, Vec
 pub async fn create_hash_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
     use sha3::{Digest, Keccak256};
     
-    let blinding_factor = {
+    let blinding_factor: Vec<u8> = {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32).map(|_| rng.gen()).collect()
@@ -180,7 +180,7 @@ pub async fn create_hash_commitment(amount: U256) -> Result<(Commitment, Vec<u8>
 }
 
 pub async fn create_polynomial_commitment(amount: U256) -> Result<(Commitment, Vec<u8>), PrivacyError> {
-    let blinding_factor = {
+    let blinding_factor: Vec<u8> = {
         use rand::Rng;
         let mut rng = rand::thread_rng();
         (0..32).map(|_| rng.gen()).collect()

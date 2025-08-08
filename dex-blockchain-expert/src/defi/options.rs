@@ -18,7 +18,7 @@ pub enum OptionStyle {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Option {
+pub struct OptionContract {
     pub id: H256,
     pub option_type: OptionType,
     pub style: OptionStyle,
@@ -35,7 +35,7 @@ pub struct Option {
 }
 
 pub struct OptionsProtocol {
-    options: Arc<RwLock<HashMap<H256, Option>>>,
+    options: Arc<RwLock<HashMap<H256, OptionContract>>>,
     pricing_engine: Arc<BlackScholesPricing>,
 }
 
@@ -82,7 +82,7 @@ impl OptionsProtocol {
         };
 
         let option_id = H256::random();
-        let option = Option {
+        let option = OptionContract {
             id: option_id,
             option_type,
             style: OptionStyle::European,
@@ -217,7 +217,7 @@ impl OptionsProtocol {
         Ok(U256::from((premium_per_unit * 1e18) as u128) * amount / U256::from(10u64.pow(18)))
     }
 
-    async fn calculate_intrinsic_value(&self, option: &Option) -> Result<U256, DeFiError> {
+    async fn calculate_intrinsic_value(&self, option: &OptionContract) -> Result<U256, DeFiError> {
         let spot_price = self.get_spot_price(option.underlying).await?;
         
         match option.option_type {

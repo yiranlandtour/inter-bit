@@ -370,7 +370,7 @@ pub struct TradingSignal {
     pub reasoning: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TradeAction {
     Buy,
     Sell,
@@ -425,7 +425,7 @@ pub struct Allocation {
     pub amount: U256,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StrategyType {
     MomentumTrading,
     MeanReversion,
