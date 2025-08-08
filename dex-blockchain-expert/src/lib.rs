@@ -12,6 +12,7 @@ pub mod privacy;
 pub mod defi;
 pub mod ai_trading;
 pub mod security;
+pub mod hyperliquid;
 
 pub use consensus::tendermint::TendermintConsensus;
 pub use state_machine::HighPerformanceStateMachine;

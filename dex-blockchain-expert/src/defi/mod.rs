@@ -8,6 +8,7 @@ use primitive_types::{H256, U256};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use crate::hyperliquid::{HyperliquidIntegration, HyperliquidConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeFiConfig {
@@ -39,6 +40,7 @@ pub struct DeFiEngine {
     options_protocol: Arc<options::OptionsProtocol>,
     lending_pool: Arc<lending::LendingPool>,
     yield_optimizer: Arc<yield_farming::YieldOptimizer>,
+    hyperliquid: Option<Arc<HyperliquidIntegration>>,
 }
 
 impl DeFiEngine {
@@ -51,7 +53,18 @@ impl DeFiEngine {
             options_protocol: Arc::new(options::OptionsProtocol::new()),
             lending_pool: Arc::new(lending::LendingPool::new(config.clone())),
             yield_optimizer: Arc::new(yield_farming::YieldOptimizer::new()),
+            hyperliquid: None,  // Initialize with None, will be set via enable_hyperliquid
             config,
+        }
+    }
+
+    pub async fn enable_hyperliquid(&mut self, hyperliquid_config: HyperliquidConfig) -> Result<(), DeFiError> {
+        match HyperliquidIntegration::new(hyperliquid_config).await {
+            Ok(integration) => {
+                self.hyperliquid = Some(Arc::new(integration));
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -137,13 +150,75 @@ impl DeFiEngine {
         let options_value = self.options_protocol.get_portfolio_value(user).await?;
         let farming_value = self.yield_optimizer.get_staked_value(user).await?;
 
+        let hyperliquid_value = if let Some(hl) = &self.hyperliquid {
+            match hl.get_account_info(user).await {
+                Ok(info) => info.balance,
+                Err(_) => U256::zero(),
+            }
+        } else {
+            U256::zero()
+        };
+
         Ok(PortfolioValue {
-            total_value: perp_value + lending_value + options_value + farming_value,
+            total_value: perp_value + lending_value + options_value + farming_value + hyperliquid_value,
             perpetual_positions: perp_value,
             lending_positions: lending_value,
             options_positions: options_value,
             yield_farming: farming_value,
+            hyperliquid_positions: hyperliquid_value,
         })
+    }
+
+    pub async fn place_hyperliquid_order(
+        &self,
+        trader: [u8; 20],
+        symbol: &str,
+        size: U256,
+        leverage: u32,
+        is_long: bool,
+    ) -> Result<H256, DeFiError> {
+        match &self.hyperliquid {
+            Some(hl) => {
+                hl.place_perpetual_order(
+                    trader,
+                    symbol,
+                    size,
+                    leverage,
+                    is_long,
+                    crate::hyperliquid::OrderType::Market,
+                    None,
+                )
+                .await
+                .map_err(|e| e.into())
+            }
+            None => Err(DeFiError::MarketClosed),
+        }
+    }
+
+    pub async fn get_hyperliquid_positions(
+        &self,
+        trader: [u8; 20],
+    ) -> Result<Vec<crate::hyperliquid::HyperliquidPosition>, DeFiError> {
+        match &self.hyperliquid {
+            Some(hl) => hl.get_positions(trader).await.map_err(|e| e.into()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub async fn deposit_to_hyperliquid_vault(
+        &self,
+        user: [u8; 20],
+        vault_address: [u8; 20],
+        amount: U256,
+    ) -> Result<H256, DeFiError> {
+        match &self.hyperliquid {
+            Some(hl) => {
+                hl.deposit_to_vault(user, vault_address, amount)
+                    .await
+                    .map_err(|e| e.into())
+            }
+            None => Err(DeFiError::MarketClosed),
+        }
     }
 
     pub async fn liquidate_position(
@@ -195,6 +270,7 @@ pub struct PortfolioValue {
     pub lending_positions: U256,
     pub options_positions: U256,
     pub yield_farming: U256,
+    pub hyperliquid_positions: U256,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
